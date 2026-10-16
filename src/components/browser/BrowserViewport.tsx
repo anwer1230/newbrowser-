@@ -8,13 +8,13 @@ import {
   Play,
   RotateCcw,
   Sparkles,
-  Layers,
   Terminal,
-  Activity,
   Database,
   ExternalLink,
   ShieldCheck,
-  CheckCircle2,
+  Maximize2,
+  AlertCircle,
+  Search,
 } from 'lucide-react';
 
 interface Props {
@@ -29,6 +29,7 @@ export const BrowserViewport: React.FC<Props> = ({
   onNavigateTab,
 }) => {
   const [activeDevTab, setActiveDevTab] = useState<'console' | 'network' | 'storage'>('network');
+  const [iframeError, setIframeError] = useState(false);
   const [consoleLogs, setConsoleLogs] = useState<string[]>([
     '[Chromium Engine] Initialized WebContents with partition: persist:main',
     '[MSE Manager] MediaSource prototype intercepted for automatic track sniffer',
@@ -74,17 +75,15 @@ export const BrowserViewport: React.FC<Props> = ({
     },
   ]);
 
-  // Video demo state inside page
-  const [isPlayingDemo, setIsPlayingDemo] = useState(false);
-  const [demoTime, setDemoTime] = useState(0);
+  const [searchInputValue, setSearchInputValue] = useState('');
 
   // Hook into videoInterceptor for simulating network events when user interacts
   useEffect(() => {
+    setIframeError(false);
     if (!tab) return;
     const url = tab.url;
 
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      // Trigger MSE detection
       videoInterceptor.detectMediaUrl(
         'https://rr2---sn-4g5lzney.googlevideo.com/videoplayback?expire=174208&mime=video/mp4',
         url,
@@ -107,102 +106,102 @@ export const BrowserViewport: React.FC<Props> = ({
 
   const currentUrl = tab?.url || 'about:blank';
   const isYoutube = currentUrl.includes('youtube.com');
-  const isHlsDemo = currentUrl.includes('mux.dev') || currentUrl.includes('hls');
+  const isHlsDemo = currentUrl.includes('mux.dev') || currentUrl.includes('.m3u8');
   const isDirectMp4 = currentUrl.endsWith('.mp4') || currentUrl.includes('sample');
+  const isBlankOrHome = currentUrl === 'about:blank' || currentUrl === 'https://www.google.com';
 
   const bookmarks = [
     { title: 'YouTube Stream', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', icon: Youtube, color: 'text-red-500' },
     { title: 'HLS Live Demo (m3u8)', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', icon: Radio, color: 'text-amber-400' },
     { title: 'Big Buck Bunny (MP4)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', icon: Play, color: 'text-emerald-400' },
-    { title: 'Blender Studio (MSE)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', icon: Sparkles, color: 'text-purple-400' },
-    { title: 'Google Search', url: 'https://www.google.com', icon: Globe, color: 'text-sky-400' },
+    { title: 'Wikipedia العربية', url: 'https://ar.wikipedia.org', icon: Globe, color: 'text-sky-400' },
+    { title: 'Internet Archive', url: 'https://archive.org', icon: Sparkles, color: 'text-amber-400' },
   ];
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchInputValue.trim()) return;
+    onNavigateTab(`https://www.google.com/search?q=${encodeURIComponent(searchInputValue.trim())}`);
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-[#202124]">
       {/* Bookmarks bar */}
-      <div dir="rtl" className="h-7 bg-[#292a2d] px-3 flex items-center gap-2 border-b border-[#35373a] text-xs select-none overflow-x-auto">
-        <span className="text-[11px] text-slate-400 shrink-0 font-medium ml-1">إشارات مرجعية سريعة:</span>
-        {bookmarks.map(b => {
-          const Icon = b.icon;
-          return (
+      <div dir="rtl" className="h-7 bg-[#292a2d] px-3 flex items-center justify-between border-b border-[#35373a] text-xs select-none">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <span className="text-[11px] text-slate-400 shrink-0 font-medium ml-1">إشارات مرجعية سريعة:</span>
+          {bookmarks.map(b => {
+            const Icon = b.icon;
+            return (
+              <button
+                key={b.title}
+                onClick={() => onNavigateTab(b.url)}
+                className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-[#35373a] text-slate-300 hover:text-white transition-colors shrink-0 text-[11px]"
+              >
+                <Icon className={`w-3 h-3 ${b.color}`} />
+                <span>{b.title}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Live URL info badge */}
+        {!isBlankOrHome && (
+          <div className="flex items-center gap-2 text-[11px] text-slate-400 shrink-0">
+            <span className="flex items-center gap-1 text-emerald-400">
+              <ShieldCheck className="w-3 h-3" />
+              <span>آمن</span>
+            </span>
             <button
-              key={b.title}
-              onClick={() => onNavigateTab(b.url)}
-              className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-[#35373a] text-slate-300 hover:text-white transition-colors shrink-0 text-[11px]"
+              onClick={() => window.open(currentUrl, '_blank')}
+              className="flex items-center gap-1 px-2 py-0.5 bg-[#383a3f] hover:bg-[#45474e] text-slate-200 rounded text-[10px] transition-colors"
+              title="فتح في نافذة كاملة جديدة"
             >
-              <Icon className={`w-3 h-3 ${b.color}`} />
-              <span>{b.title}</span>
+              <ExternalLink className="w-3 h-3" />
+              <span>نافذة كاملة</span>
             </button>
-          );
-        })}
+          </div>
+        )}
       </div>
 
       {/* Main Viewport Content Split */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Rendered Web Canvas */}
-        <div className="flex-1 flex flex-col bg-[#141517] overflow-auto relative">
-          {/* Simulated Web Page Content */}
-          <div className="p-6 max-w-5xl mx-auto w-full space-y-6 text-slate-200">
-            {/* Active URL Card header */}
-            <div className="flex items-center justify-between p-4 bg-[#1f2023] rounded-2xl border border-[#2f3136]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
-                  <Globe className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">{tab?.title || 'الصفحة الحالية'}</h3>
-                  <p className="text-xs text-sky-400 font-mono">{currentUrl}</p>
-                </div>
+        {/* Rendered Web Canvas (Takes Full 100% Width & Height) */}
+        <div className="flex-1 flex flex-col bg-[#141517] overflow-hidden relative w-full h-full">
+          {/* Case 1: Custom YouTube Stream Simulation with MSE Interceptor */}
+          {isYoutube ? (
+            <div className="w-full h-full flex flex-col bg-black overflow-y-auto">
+              <div className="w-full bg-black flex items-center justify-center relative min-h-[55vh] max-h-[75vh]">
+                <video
+                  controls
+                  autoPlay
+                  src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                  className="w-full h-full object-contain"
+                  onPlay={() => {
+                    videoInterceptor.triggerMseChunk(currentUrl, tab?.title || 'YouTube Video');
+                  }}
+                  onTimeUpdate={e => {
+                    if (Math.floor(e.currentTarget.currentTime) % 4 === 0) {
+                      videoInterceptor.triggerMseChunk(currentUrl, tab?.title || 'YouTube Video');
+                    }
+                  }}
+                  onEnded={() => {
+                    videoInterceptor.finalizeActiveMse('ended');
+                  }}
+                />
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1 text-[11px] bg-emerald-500/15 text-emerald-400 font-medium px-2 py-1 rounded-md">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>اتصال مشفر وآمن</span>
-                </span>
-              </div>
-            </div>
-
-            {/* If YouTube Page Simulation */}
-            {isYoutube ? (
-              <div className="space-y-4">
-                <div className="bg-black rounded-2xl overflow-hidden border border-[#2e3035] shadow-2xl">
-                  <div className="aspect-video relative bg-black flex items-center justify-center">
-                    <video
-                      controls
-                      autoPlay
-                      src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-                      className="w-full h-full object-contain"
-                      onPlay={() => {
-                        setIsPlayingDemo(true);
-                        videoInterceptor.triggerMseChunk(currentUrl, tab?.title || 'YouTube Video');
-                      }}
-                      onTimeUpdate={e => {
-                        setDemoTime(e.currentTarget.currentTime);
-                        if (Math.floor(e.currentTarget.currentTime) % 4 === 0) {
-                          videoInterceptor.triggerMseChunk(currentUrl, tab?.title || 'YouTube Video');
-                        }
-                      }}
-                      onEnded={() => {
-                        videoInterceptor.finalizeActiveMse('ended');
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="p-5 bg-[#1f2023] rounded-2xl border border-[#2f3136] space-y-3">
-                  <div className="flex items-center justify-between">
+              <div dir="rtl" className="p-6 bg-[#18191c] border-t border-[#2a2c30] flex-1">
+                <div className="max-w-5xl mx-auto space-y-4">
+                  <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h1 className="text-base font-bold text-white">
-                        {tab?.title || 'YouTube High Fidelity Video - Auto MSE Sniffing'}
+                      <h1 className="text-lg font-bold text-white">
+                        {tab?.title || 'YouTube Video Player - MediaSource MSE Capturing'}
                       </h1>
                       <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
                         <span>1,420,950 مشاهدة</span>
                         <span>·</span>
-                        <span>تم النشر قبل يومين</span>
-                        <span>·</span>
-                        <span className="text-purple-400 font-medium">تم اكتشاف تدفق MSE النشط ومسارات الصوت والصورة</span>
+                        <span className="text-purple-400 font-semibold">يتم اعتراض مسارات MSE الصوتية والمرئية تلقائياً</span>
                       </div>
                     </div>
 
@@ -211,120 +210,139 @@ export const BrowserViewport: React.FC<Props> = ({
                         videoInterceptor.finalizeActiveMse('idle');
                         alert('تم إنهاء جلسة MSE ودمج الفيديو بـ ffmpeg وحفظه في المكتبة!');
                       }}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-colors"
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-colors shrink-0"
                     >
                       دمج المسارات الآن فوراً (Finalize MSE)
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          ) : isHlsDemo ? (
+            /* Case 2: HLS Stream Player */
+            <div className="w-full h-full flex flex-col bg-black overflow-y-auto">
+              <div className="w-full bg-black flex items-center justify-center relative min-h-[55vh] max-h-[75vh]">
+                <video
+                  controls
+                  autoPlay
+                  src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                  className="w-full h-full object-contain"
+                />
+              </div>
 
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    يعترض المتصفح تلقائياً استدعاءات <code className="text-amber-400 font-mono">MediaSource.prototype.addSourceBuffer</code> ويلتقط كل قطعة (Chunk) متدفقة للصوت والفيديو، ويحفظها في مجلد مؤقت، ثم يقوم بدمجها عند الخمول أو انتهاء الفيديو دون أي خسارة في الجودة.
+              <div dir="rtl" className="p-6 bg-[#18191c] border-t border-[#2a2c30] flex-1">
+                <div className="max-w-5xl mx-auto flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-bold text-white">بث HLS المتكيف (m3u8 Live Stream)</h2>
+                    <p className="text-xs text-amber-400 mt-1 font-mono">{currentUrl}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      videoInterceptor.startManualHlsDownload({
+                        url: currentUrl,
+                        title: 'HLS Live Stream Broadcast',
+                      });
+                    }}
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-colors"
+                  >
+                    تحميل كل مقاطع HLS ودمجها بـ ffmpeg
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : isDirectMp4 ? (
+            /* Case 3: Direct MP4 Video Fullscreen Player */
+            <div className="w-full h-full flex flex-col bg-black">
+              <video
+                controls
+                autoPlay
+                src={currentUrl}
+                className="w-full h-full object-contain"
+              />
+            </div>
+          ) : isBlankOrHome ? (
+            /* Case 4: Google & Web Navigation Portal (Home Screen) */
+            <div dir="rtl" className="w-full h-full flex flex-col items-center justify-center p-6 overflow-y-auto bg-gradient-to-b from-[#202124] to-[#141517]">
+              <div className="w-full max-w-2xl space-y-8 text-center">
+                {/* Logo */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-3 shadow-2xl flex items-center justify-center">
+                    <img src="/icon.svg" alt="Chromium" className="w-full h-full object-contain" />
+                  </div>
+                  <h1 className="text-2xl font-bold text-white tracking-wide">متصفح Chromium Clone</h1>
+                  <p className="text-xs text-slate-400">
+                    أدخل أي رابط موقع ويب في شريط العناوين بالأعلى أو ابحث مباشرة
                   </p>
                 </div>
-              </div>
-            ) : isHlsDemo ? (
-              /* HLS Stream View */
-              <div className="space-y-4">
-                <div className="bg-black rounded-2xl overflow-hidden border border-[#2e3035] shadow-2xl">
-                  <div className="aspect-video relative bg-black flex items-center justify-center">
-                    <video
-                      controls
-                      autoPlay
-                      src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </div>
 
-                <div className="p-5 bg-[#1f2023] rounded-2xl border border-[#2f3136] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-base font-bold text-white">بث HLS المتكيف (HTTP Live Streaming - m3u8)</h2>
-                      <p className="text-xs text-amber-400 mt-1 font-mono">{currentUrl}</p>
-                    </div>
+                {/* Search Box */}
+                <form onSubmit={handleSearchSubmit} className="relative w-full">
+                  <input
+                    type="text"
+                    placeholder="ابحث في الويب أو أدخل رابطاً..."
+                    value={searchInputValue}
+                    onChange={e => setSearchInputValue(e.target.value)}
+                    className="w-full h-12 pr-12 pl-24 rounded-full bg-[#292a2d] border border-[#3c4043] focus:border-sky-500 focus:outline-none text-sm text-white shadow-xl placeholder-slate-400"
+                  />
+                  <Search className="w-5 h-5 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2" />
+                  <button
+                    type="submit"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs rounded-full transition-colors"
+                  >
+                    بحث
+                  </button>
+                </form>
 
+                {/* Quick Launch Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+                  {bookmarks.slice(0, 4).map(b => (
                     <button
-                      onClick={() => {
-                        videoInterceptor.startManualHlsDownload({
-                          url: currentUrl,
-                          title: 'HLS Live Demo Stream Broadcast',
-                        });
-                      }}
-                      className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-colors"
+                      key={b.title}
+                      onClick={() => onNavigateTab(b.url)}
+                      className="p-3.5 bg-[#25272a] hover:bg-[#2f3237] border border-[#35383e] rounded-xl flex flex-col items-center gap-2 text-center transition-all group"
                     >
-                      تحميل كل مقاطع HLS ودمجها بـ ffmpeg
+                      <b.icon className={`w-6 h-6 ${b.color} group-hover:scale-110 transition-transform`} />
+                      <span className="text-xs font-semibold text-slate-200">{b.title}</span>
                     </button>
-                  </div>
+                  ))}
                 </div>
               </div>
-            ) : isDirectMp4 ? (
-              /* Direct MP4 view */
-              <div className="space-y-4">
-                <div className="bg-black rounded-2xl overflow-hidden border border-[#2e3035]">
-                  <div className="aspect-video relative bg-black flex items-center justify-center">
-                    <video
-                      controls
-                      autoPlay
-                      src={currentUrl}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </div>
-                <div className="p-4 bg-[#1f2023] rounded-2xl border border-[#2f3136] flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-bold text-white">ملف فيديو MP4 مباشر</h3>
-                    <p className="text-xs text-slate-400">تم الكشف عنه وبدء التسجيل التلقائي بمكتبة التنزيلات</p>
-                  </div>
-                  <span className="text-xs bg-emerald-500/20 text-emerald-300 font-semibold px-3 py-1 rounded-full">
-                    MP4 Progressive Stream
-                  </span>
-                </div>
-              </div>
-            ) : (
-              /* General Web Page Layout Simulator */
-              <div className="space-y-6">
-                <div className="bg-[#1c1d20] border border-[#2c2e33] p-6 rounded-2xl space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold text-lg">
-                      G
-                    </div>
-                    <div>
-                      <h2 className="text-base font-bold text-white">Google Search & Web Navigator</h2>
-                      <p className="text-xs text-slate-400">تصفح الويب بكامل ميزات Chromium وواجهة التبويبات المتعددة</p>
-                    </div>
-                  </div>
+            </div>
+          ) : (
+            /* Case 5: Real Full-Screen Web Page Frame */
+            <div className="w-full h-full flex-1 flex flex-col relative bg-white">
+              <iframe
+                title={tab?.title || 'Web Viewport'}
+                src={currentUrl}
+                className="w-full h-full flex-1 border-0 bg-white"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads allow-modals"
+                onError={() => setIframeError(true)}
+              />
 
-                  <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {bookmarks.map(b => (
-                      <div
-                        key={b.title}
-                        onClick={() => onNavigateTab(b.url)}
-                        className="p-3 bg-[#23252a] hover:bg-[#2b2d33] border border-[#30333a] rounded-xl cursor-pointer transition-all flex items-center gap-3"
-                      >
-                        <b.icon className={`w-5 h-5 ${b.color}`} />
-                        <div>
-                          <div className="text-xs font-bold text-slate-200">{b.title}</div>
-                          <div className="text-[10px] text-slate-400 truncate max-w-[160px]">{b.url}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              {/* Informative fallback bar if external site enforces strict X-Frame-Options */}
+              <div
+                dir="rtl"
+                className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 bg-[#1e2024]/95 border border-[#3a3d44] text-slate-200 px-4 py-2 rounded-xl text-xs shadow-2xl backdrop-blur-md flex items-center gap-3"
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-sky-400" />
+                  <span className="font-mono text-slate-300 text-[11px] truncate max-w-xs">{currentUrl}</span>
                 </div>
-
-                <div className="p-4 bg-gradient-to-r from-sky-950/20 to-purple-950/20 border border-sky-500/20 rounded-2xl flex items-center justify-between text-xs">
-                  <div className="space-y-1">
-                    <span className="font-bold text-sky-400">الميزات المدمجة المفعلة في هذه الصفحة:</span>
-                    <p className="text-slate-400">
-                      حاجب الإعلانات (AdBlock Pro) · مانع المتتبعات · التقاط الفيديو التلقائي · مدير كلمات المرور (AutoFill) · نفق WireGuard المشفر
-                    </p>
-                  </div>
+                <div className="flex items-center gap-1.5 border-r border-[#3a3d44] pr-2">
+                  <button
+                    onClick={() => window.open(currentUrl, '_blank')}
+                    className="flex items-center gap-1 px-2.5 py-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold rounded-lg text-[11px] transition-colors"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span>فتح كنافذة كاملة</span>
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* DevTools Drawer (Bottom or Right) */}
+        {/* DevTools Drawer */}
         {devToolsOpen && (
           <aside className="w-96 bg-[#18191c] border-r border-[#2b2d31] flex flex-col overflow-hidden text-xs text-slate-200">
             {/* DevTools Header */}
