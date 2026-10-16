@@ -1,0 +1,7 @@
+{
+  "name": "Chromium Clone Browser & Video Studio",
+  "description": "متصفح Chromium متكامل مع تسجيل الفيديو التلقائي (MP4/MSE/HLS)، لوحة التنزيلات الموحدة، مدير كلمات المرور المشفر، دعم الإضافات، ومزامنة WebDAV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
