@@ -22,6 +22,16 @@ import { videoInterceptor } from './services/videoInterceptor';
 
 const INITIAL_TABS: BrowserTab[] = [
   {
+    id: 'tab_google',
+    url: 'https://www.google.com',
+    title: 'علامة تبويب جديدة',
+    loading: false,
+    canBack: false,
+    canForward: false,
+    history: ['https://www.google.com'],
+    historyIndex: 0,
+  },
+  {
     id: 'tab_yt_demo',
     url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     title: 'YouTube Stream - MSE Auto-Capture',
@@ -41,21 +51,11 @@ const INITIAL_TABS: BrowserTab[] = [
     history: ['https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'],
     historyIndex: 0,
   },
-  {
-    id: 'tab_google',
-    url: 'https://www.google.com',
-    title: 'Google',
-    loading: false,
-    canBack: false,
-    canForward: false,
-    history: ['https://www.google.com'],
-    historyIndex: 0,
-  },
 ];
 
 export default function App() {
   const [tabs, setTabs] = useState<BrowserTab[]>(INITIAL_TABS);
-  const [activeTabId, setActiveTabId] = useState<string>('tab_yt_demo');
+  const [activeTabId, setActiveTabId] = useState<string>('tab_google');
 
   // Modals & Panels
   const [isDownloadsOpen, setIsDownloadsOpen] = useState(false);
