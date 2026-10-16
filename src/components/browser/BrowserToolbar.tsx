@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserTab } from '../../types';
+import { ChromeMenuDropdown } from './ChromeMenuDropdown';
 import {
   ArrowLeft,
   ArrowRight,
@@ -8,11 +9,14 @@ import {
   Download,
   Film,
   Shield,
-  Settings,
   Radio,
-  Code2,
-  Terminal,
-  Bookmark,
+  Star,
+  MoreVertical,
+  Laptop,
+  Puzzle,
+  User,
+  SlidersHorizontal,
+  ArrowDownToLine,
 } from 'lucide-react';
 
 interface Props {
@@ -53,6 +57,8 @@ export const BrowserToolbar: React.FC<Props> = ({
   onOpenInstall,
 }) => {
   const [addressInput, setAddressInput] = useState(activeTab?.url || '');
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (activeTab) {
@@ -68,132 +74,172 @@ export const BrowserToolbar: React.FC<Props> = ({
   };
 
   return (
-    <div dir="rtl" className="h-12 bg-[#202124] px-3 flex items-center gap-2 border-b border-[#303338] select-none text-slate-200">
-      {/* Navigation Buttons */}
-      <div className="flex items-center gap-1">
+    <div dir="rtl" className="h-11 bg-[#2b2d30] px-3 flex items-center gap-2 border-b border-[#3c4043] select-none text-slate-200 relative z-30">
+      {/* 1. Navigation Controls */}
+      <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={onBack}
           disabled={!activeTab?.canBack}
-          className="w-8 h-8 rounded-full hover:bg-[#32363b] disabled:opacity-30 disabled:hover:bg-transparent flex items-center justify-center transition-colors"
-          title="رجوع"
+          className="w-7 h-7 rounded-full hover:bg-[#393c40] disabled:opacity-30 disabled:hover:bg-transparent flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+          title="انقر للرجوع للخلف"
         >
           <ArrowRight className="w-4 h-4" />
         </button>
+
         <button
           onClick={onForward}
           disabled={!activeTab?.canForward}
-          className="w-8 h-8 rounded-full hover:bg-[#32363b] disabled:opacity-30 disabled:hover:bg-transparent flex items-center justify-center transition-colors"
-          title="تقدم"
+          className="w-7 h-7 rounded-full hover:bg-[#393c40] disabled:opacity-30 disabled:hover:bg-transparent flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+          title="انقر للتقدم للأمام"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
+
         <button
           onClick={onReload}
-          className="w-8 h-8 rounded-full hover:bg-[#32363b] flex items-center justify-center transition-colors"
-          title="تحديث الصفحة"
+          className="w-7 h-7 rounded-full hover:bg-[#393c40] flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+          title="إعادة تحميل هذه الصفحة"
         >
-          <RotateCw className="w-4 h-4" />
+          <RotateCw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Address Omnibox */}
-      <form onSubmit={handleSubmit} className="flex-1 max-w-3xl">
-        <div className="relative flex items-center bg-[#292a2d] hover:bg-[#303236] focus-within:bg-[#202124] focus-within:ring-2 focus-within:ring-sky-500/50 rounded-full h-8 px-3 transition-all border border-[#3c4043]/50">
-          <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0 ml-2" />
+      {/* 2. Chrome Omnibox (Address Bar) */}
+      <form onSubmit={handleSubmit} className="flex-1 max-w-4xl mx-1">
+        <div className="relative flex items-center bg-[#1e1f22] hover:bg-[#232529] focus-within:bg-[#1e1f22] focus-within:ring-2 focus-within:ring-[#8ab4f8] rounded-full h-8 px-3.5 transition-all border border-[#3c4043]/40 shadow-inner">
+          {/* Tune / Site Security Button */}
+          <button
+            type="button"
+            className="p-1 -mr-1 text-slate-400 hover:text-white rounded-full hover:bg-[#32343a] flex items-center gap-1 transition-colors"
+            title="معلومات الموقع والأمان"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+          </button>
+
+          {/* URL Input */}
           <input
             dir="ltr"
             type="text"
             value={addressInput}
             onChange={e => setAddressInput(e.target.value)}
-            placeholder="ابحث على Google أو أدخل رابط موقع ويب..."
-            className="w-full bg-transparent text-xs text-white placeholder-slate-400 focus:outline-none"
+            onFocus={e => e.target.select()}
+            placeholder="ابحث في Google أو اكتب عنوان URL"
+            className="w-full bg-transparent text-xs text-slate-100 placeholder-slate-400 focus:outline-none px-2 font-sans tracking-wide"
           />
-          <Bookmark className="w-3.5 h-3.5 text-slate-500 hover:text-amber-400 cursor-pointer mr-1" />
+
+          {/* Omnibox Action Icons */}
+          <div className="flex items-center gap-1 shrink-0 -ml-1">
+            {/* Native Install Button inside Omnibox (like Chrome Desktop) */}
+            <button
+              type="button"
+              onClick={onOpenInstall}
+              className="p-1 rounded-full text-slate-400 hover:text-sky-400 hover:bg-[#32343a] transition-colors"
+              title="تثبيت التطبيق"
+            >
+              <ArrowDownToLine className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Bookmark Star Button */}
+            <button
+              type="button"
+              onClick={() => setIsBookmarked(prev => !prev)}
+              className={`p-1 rounded-full hover:bg-[#32343a] transition-colors ${isBookmarked ? 'text-amber-400' : 'text-slate-400 hover:text-white'}`}
+              title={isBookmarked ? 'تمت إضافة الصفحة للإشارات المرجعية' : 'إضافة هذه الصفحة للإشارات المرجعية'}
+            >
+              <Star className="w-3.5 h-3.5 fill-current" />
+            </button>
+          </div>
         </div>
       </form>
 
-      {/* Action Toolbar Icons */}
-      <div className="flex items-center gap-1 mr-auto">
-        {/* Unified Downloads Button with Live Badge */}
+      {/* 3. Chrome Extension Icons & Actions */}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Extensions Icon (Chrome Puzzle Piece) */}
         <button
-          onClick={onToggleDownloads}
-          className="relative w-8 h-8 rounded-full hover:bg-[#32363b] flex items-center justify-center transition-colors"
-          title="لوحة التنزيلات الموحدة (HLS + MSE + MP4)"
+          onClick={onOpenSettings}
+          className="w-7 h-7 rounded-full hover:bg-[#393c40] text-slate-400 hover:text-slate-200 flex items-center justify-center transition-colors"
+          title="الإضافات (Extensions)"
         >
-          <Download className="w-4 h-4 text-sky-400" />
-          {downloadsBadgeCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
-              {downloadsBadgeCount}
-            </span>
-          )}
+          <Puzzle className="w-4 h-4" />
         </button>
 
-        {/* HLS Manual Downloader */}
-        <button
-          onClick={onOpenHls}
-          className="w-8 h-8 rounded-full hover:bg-[#32363b] flex items-center justify-center text-amber-400 transition-colors"
-          title="تحميل فيديو HLS (m3u8)"
-        >
-          <Radio className="w-4 h-4" />
-        </button>
-
-        {/* Video Library */}
+        {/* Video Sniffer / Library Button */}
         <button
           onClick={onOpenLibrary}
-          className="w-8 h-8 rounded-full hover:bg-[#32363b] flex items-center justify-center text-sky-400 transition-colors"
+          className="w-7 h-7 rounded-full hover:bg-[#393c40] text-amber-400 flex items-center justify-center transition-colors"
           title="مكتبة الفيديوهات المسجلة"
         >
           <Film className="w-4 h-4" />
         </button>
 
-        {/* WireGuard VPN Button */}
+        {/* HLS Downloader */}
+        <button
+          onClick={onOpenHls}
+          className="w-7 h-7 rounded-full hover:bg-[#393c40] text-sky-400 flex items-center justify-center transition-colors"
+          title="تحميل مقاطع HLS (m3u8)"
+        >
+          <Radio className="w-4 h-4" />
+        </button>
+
+        {/* WireGuard VPN Toggle Badge */}
         <button
           onClick={onOpenVpn}
-          className="relative w-8 h-8 rounded-full hover:bg-[#32363b] flex items-center justify-center transition-colors"
-          title="إدارة WireGuard VPN"
+          className="relative w-7 h-7 rounded-full hover:bg-[#393c40] text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+          title={isVpnConnected ? 'WireGuard VPN: متصل' : 'WireGuard VPN: غير متصل'}
         >
           <Shield className={`w-4 h-4 ${isVpnConnected ? 'text-emerald-400' : 'text-slate-400'}`} />
           {isVpnConnected && (
-            <span className="absolute 1 top-1.5 right-1.5 w-2 h-2 bg-emerald-400 rounded-full" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full" />
           )}
         </button>
 
-        {/* Code / Electron Exporter */}
+        {/* Unified Downloads Button with Badge */}
         <button
-          onClick={onOpenCode}
-          className="w-8 h-8 rounded-full hover:bg-[#32363b] flex items-center justify-center text-emerald-400 transition-colors"
-          title="الكود المصدري لـ Electron (Native Code)"
+          onClick={onToggleDownloads}
+          className="relative w-7 h-7 rounded-full hover:bg-[#393c40] text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+          title="التنزيلات"
         >
-          <Code2 className="w-4 h-4" />
+          <Download className="w-4 h-4 text-sky-400" />
+          {downloadsBadgeCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-sky-500 text-slate-950 font-bold text-[9px] rounded-full flex items-center justify-center">
+              {downloadsBadgeCount}
+            </span>
+          )}
         </button>
 
-        {/* Install PWA Button */}
-        <button
-          onClick={onOpenInstall}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30 text-xs font-semibold transition-all hover:scale-105 active:scale-95"
-          title="تثبيت Chromium Clone كتطبيق فعلي على الجهاز"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">تثبيت التطبيق</span>
-        </button>
-
-        {/* Settings Button */}
-        <button
+        {/* Chrome Profile Circle Avatar */}
+        <div
           onClick={onOpenSettings}
-          className="w-8 h-8 rounded-full hover:bg-[#32363b] flex items-center justify-center text-slate-300 hover:text-white transition-colors"
-          title="الإعدادات الشاملة (Stage 3)"
+          className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-500 hover:ring-2 hover:ring-sky-400 cursor-pointer flex items-center justify-center text-white text-[10px] font-bold shadow-sm mr-1 transition-all"
+          title="ملف المستخدم والإعدادات"
         >
-          <Settings className="w-4 h-4" />
-        </button>
+          <User className="w-3.5 h-3.5" />
+        </div>
 
-        {/* DevTools Menu */}
-        <button
-          onClick={onToggleDevTools}
-          className={`w-8 h-8 rounded-full hover:bg-[#32363b] flex items-center justify-center transition-colors ${devToolsOpen ? 'text-sky-400 bg-[#32363b]' : 'text-slate-400'}`}
-          title="أدوات المطور ومفتش الشبكة (DevTools)"
-        >
-          <Terminal className="w-4 h-4" />
-        </button>
+        {/* Chrome Three Dots Menu Button (⋮) */}
+        <div className="relative">
+          <button
+            onClick={() => setIsMenuOpen(prev => !prev)}
+            className={`w-7 h-7 rounded-full hover:bg-[#393c40] flex items-center justify-center transition-colors ${isMenuOpen ? 'bg-[#393c40] text-white' : 'text-slate-300 hover:text-white'}`}
+            title="تخصيص والتحكم في Chromium Clone"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+
+          {/* Chrome Real Dropdown Menu */}
+          <ChromeMenuDropdown
+            isOpen={isMenuOpen}
+            onClose={() => setIsMenuOpen(false)}
+            onNewTab={() => onNavigate('https://www.google.com')}
+            onOpenDownloads={onToggleDownloads}
+            onOpenLibrary={onOpenLibrary}
+            onOpenSettings={onOpenSettings}
+            onOpenVpn={onOpenVpn}
+            onOpenDevTools={onToggleDevTools}
+            onOpenInstall={onOpenInstall}
+            onOpenCode={onOpenCode}
+          />
+        </div>
       </div>
     </div>
   );
