@@ -3,7 +3,7 @@ services:
   - type: web
     name: chromium-clone-browser
     runtime: static
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     staticPublishPath: ./dist
     routes:
       - type: rewrite

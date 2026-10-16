@@ -48,7 +48,7 @@
 4. أدخل الإعدادات التالية:
    - **Name:** `chromium-clone-browser`
    - **Branch:** `main` (أو `master`)
-   - **Build Command:** `npm install && npm run build`
+   - **Build Command:** `npm install --legacy-peer-deps && npm run build`
    - **Publish Directory:** `dist`
 5. في قسم **Redirects/Rewrites**:
    - اضغط **Add Rewrite**.
